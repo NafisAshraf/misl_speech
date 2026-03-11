@@ -29,9 +29,9 @@ let chunks = [];
 // }
 
 function capitalizeSentences(text) {
-      return text.replace(/(^\w|\.\s*\w)/g, function(match) {
-        return match.toUpperCase();
-      });
+  return text.replace(/(^\w|\.\s*\w)/g, function (match) {
+    return match.toUpperCase();
+  });
 }
 
 // Check if the user's browser is Google Chrome
@@ -74,9 +74,8 @@ if (userAgent.indexOf("Chrome") == -1) {
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         // If the result item is Final, add it to Final Transcript, Else add it to Interim transcript
         if (event.results[i].isFinal) {
-          final_transcript += `${capitalizeSentences(event.results[i][0].transcript)}${
-            languageSelector.value === "bn-BD" ? "।" : "."
-          } `;
+          final_transcript += `${capitalizeSentences(event.results[i][0].transcript)}${languageSelector.value === "bn-BD" ? "।" : "."
+            } `;
 
           speechRecognition.stop();
           if (isRecognitionStarted) {
@@ -84,7 +83,7 @@ if (userAgent.indexOf("Chrome") == -1) {
               speechRecognition.start();
             }, 500);
           }
-        } else {                 
+        } else {
           interim_transcript += event.results[i][0].transcript + " ";
         }
       }
@@ -187,14 +186,8 @@ if (userAgent.indexOf("Chrome") == -1) {
     // // Set the onClick property of the transcribe button
     transcribeButton.onclick = async () => {
       try {
-        if (!["bn-BD", "en-US"].includes(languageSelector.value)) {
-          alert(
-            "This language is not supported yet. Only bangla and english is available."
-          );
-          return;
-        }
         if (final_transcript.length === 0) {
-          alert("Not enough text to transcribe");
+          alert("Not enough text to summarize");
           return;
         }
         document.querySelector(
@@ -210,48 +203,52 @@ if (userAgent.indexOf("Chrome") == -1) {
         editButton.setAttribute("aria-disabled", "true");
         transcribeButton.disabled = true;
         transcribeButton.setAttribute("aria-disabled", "true");
-        const response = await fetch(
-          `${
-            import.meta.env.DEV ? import.meta.env.VITE_SERVER_URL : ""
-          }/transcribe`,
-          {
-            method: "post",
-            body: JSON.stringify({
-              message: final_transcript,
-              lang: languageSelector.value,
-            }),
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        // if (Object.keys(slmUrl).includes(languageSelector.value)) {
-        //   query({ inputs: final_transcript }, languageSelector.value).then(
-        //     (response) => {
-        //       console.log(JSON.stringify(response));
-        //     }
-        //   );
-        // }
+
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer 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",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "openai/gpt-oss-20b",
+            messages: [
+              {
+                role: "system",
+                content: "You are a helpful assistant that summarizes transcribed speech into clear, concise bullet points. Keep the summary short and informative.",
+              },
+              {
+                role: "user",
+                content: `Please summarize the following transcription:\n\n${final_transcript}`,
+              },
+            ],
+          }),
+        });
+
         const data = await response.json();
-        document.querySelector("#transcribed").innerHTML = data.message;
+        const summary = data?.choices?.[0]?.message?.content;
+        document.querySelector("#transcribed").innerHTML = summary
+          ? summary.replace(/\n/g, "<br>")
+          : "No summary returned.";
       } catch (error) {
         console.log(error.message);
+        document.querySelector("#transcribed").innerHTML = "Error: " + error.message;
       }
       transcribeButton.disabled = false;
       transcribeButton.setAttribute("aria-disabled", "false");
-      // final_transcript = "";
       startButton.disabled = false;
       startButton.setAttribute("aria-disabled", "false");
     };
+
     deleteAudioButton.onclick = (e) => {
       window.URL.revokeObjectURL(audioURL);
       deleteAudioButton.style = "display: none";
       downloadButton.style = "display: none";
     };
     editButton.onclick = () => {
-       let finalTranscript = document.getElementById('final');
-       finalTranscript.contentEditable = true;
-       finalTranscript.focus()
+      let finalTranscript = document.getElementById('final');
+      finalTranscript.contentEditable = true;
+      finalTranscript.focus()
     }
     // Callback Function for the onStart Event
     speechRecognition.onstart = (e) => {
