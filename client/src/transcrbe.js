@@ -207,7 +207,7 @@ if (userAgent.indexOf("Chrome") == -1) {
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
-            "Authorization": "Bearer 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",
+            "Authorization": `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
