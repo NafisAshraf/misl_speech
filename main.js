@@ -92,6 +92,12 @@ if (userAgent.indexOf("Chrome") == -1) {
       }, 320);
       isRecognitionStarted = false;
     };
+    // Set the onClick property of the clear button
+    document.querySelector("#clear").onclick = () => {
+      final_transcript = "";
+      document.querySelector("#final").innerHTML = "";
+      document.querySelector("#interim").innerHTML = "";
+    };
   } else {
     console.log("Speech Recognition Not Available");
   }
