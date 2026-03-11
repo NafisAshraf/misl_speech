@@ -204,10 +204,19 @@ if (userAgent.indexOf("Chrome") == -1) {
         transcribeButton.disabled = true;
         transcribeButton.setAttribute("aria-disabled", "true");
 
+        const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+        console.log("OpenRouter API Key present:", !!apiKey);
+        if (!apiKey) {
+          alert("API Key is missing. Please restart the dev server or check your .env file.");
+          throw new Error("Missing API Key");
+        }
+
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+            "Authorization": `Bearer ${apiKey}`,
+            "HTTP-Referer": window.location.origin, // Preferred by OpenRouter
+            "X-Title": "MIR STT Frontend", // Preferred by OpenRouter
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
